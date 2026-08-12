@@ -1,61 +1,51 @@
 <p align="center">
-  <img src="./portal-logo.png" alt="Portal" width="112">
+  <img src="./portal-logo.png" alt="Portal" width="128">
 </p>
 
 <h1 align="center">Portal</h1>
 
-<p align="center">
-  <strong>MLS-native messaging. Clients hold the keys; the backend orders ciphertext.</strong>
-</p>
+Portal is a private messaging app for DMs, group chats, media, and calls. It encrypts messages on your device before they leave, so the server can deliver and sync them without having the keys to read them. Every conversation—including a two-person DM—uses Messaging Layer Security (MLS), the same protocol built for secure group messaging.
 
-<p align="center">
-  <a href="https://portalchat.org">portalchat.org</a>
-</p>
+## How it works
 
-<img src="./portal-og-card.png" alt="Portal — private, end-to-end encrypted chats" width="100%">
-
-## The boundary
-
-Portal uses [Messaging Layer Security (RFC 9420)](https://www.rfc-editor.org/rfc/rfc9420) for every conversation, including two-person DMs.
-
-Clients own plaintext, MLS group state, attachment keys, and identity private keys. The backend is an **MLS Delivery Service, synchronization authority, and policy-enforcement layer**—not a member of the cryptographic group.
+Portal keeps cryptography on the client and delivery on the server.
 
 ```text
 React / iOS clients
-  plaintext · MLS epoch secrets · attachment keys · identity keys
+  plaintext · MLS state · attachment keys · identity keys
                           │
-                          │ WebAuthn + typed REST / Socket.IO
+                          │ WebAuthn + REST / Socket.IO
                           │ public MLS framing + opaque ciphertext
                           ▼
 Portal backend
-  device auth · membership policy · epoch CAS · ordering · sync
+  authentication · policy · epoch ordering · delivery · sync
                           │
             ┌─────────────┼─────────────┐
             ▼             ▼             ▼
        PostgreSQL       Redis 8    Cloudflare R2
-       canonical state  timelines   encrypted media
+       account state    timelines   encrypted media
 ```
 
-The server can see account identity, membership, roles, policy, timing, ordering, ciphertext size, routing, and the public framing of MLS commits. It never receives group secrets or the keys required to decrypt application messages.
+The server sees account identity, membership, roles, timing, routing, ciphertext size, and the public parts of MLS commits. It does not receive message plaintext, MLS group secrets, attachment keys, or identity private keys.
 
 ## Backend responsibilities
 
-| Boundary | What Portal does |
+| Area | Implementation |
 |---|---|
 | Authentication | WebAuthn passkeys, device-scoped sessions, trusted device pairing |
-| Authorization | Conversation membership, moderation, roles, and leaf-to-device binding |
-| MLS coordination | Validates public commit framing and serializes epoch changes with compare-and-append |
-| Messaging | Stores ordered application ciphertext without joining the MLS group |
+| Authorization | Conversation membership, moderation, roles, and MLS leaf-to-device binding |
+| MLS coordination | Public commit validation and compare-and-append epoch changes |
+| Messaging | Ordered ciphertext storage without making the server an MLS group member |
 | Synchronization | Canonical REST timelines, ETags, bounded replay, and revision manifests |
-| Realtime | Socket.IO timeline fan-out and narrow invalidation doorbells—not a second source of truth |
-| Media | Client-side AES-GCM encryption; opaque blobs in R2; internal imgproxy rendering |
-| Calls | WebRTC mesh plus SFU-routed group calls with client-side SFrame encryption |
+| Realtime | Socket.IO fan-out and invalidation events; REST remains the source of truth |
+| Media | Client-side AES-GCM encryption with opaque objects stored in R2 |
+| Calls | WebRTC mesh and SFU-routed group calls with client-side SFrame encryption |
 
-## Epochs converge by construction
+## MLS commit ordering
 
-Portal accepts at most one MLS commit against the live epoch. A losing writer receives an epoch conflict, replays the canonical timeline, rebuilds against the new epoch, and retries. Membership changes and key rotations therefore converge on one ordered history without giving the server the secrets needed to validate or decrypt group content.
+An MLS membership change also changes the group's epoch. When two clients submit commits for the same epoch, the backend accepts one and returns an epoch conflict for the other. The losing client replays the canonical timeline, rebuilds its commit against the new epoch, and retries.
 
-Welcomes are peeked before they are consumed, so a crash before local persistence cannot destroy a device's only recoverable join material.
+Welcome messages use a peek-then-consume flow. A joining device saves its MLS state locally before deleting the server copy, so a crash cannot destroy its only usable join material.
 
 ## Stack
 
@@ -63,13 +53,19 @@ Welcomes are peeked before they are consumed, so a crash before local persistenc
 |---|---|
 | Backend | Python 3.13, FastAPI, async SQLAlchemy, Pydantic, Socket.IO, py-webauthn |
 | Web | React 19, TypeScript, Vite, Zustand, Tailwind v4, Zod, Motion |
-| Native | Swift / SwiftUI iOS client |
+| Native | Swift and SwiftUI |
 | Cryptography | MLS (RFC 9420), AES-GCM attachments, SFrame calls |
 | State | PostgreSQL 16, Redis 8, Alembic migrations |
 | Edge | Cloudflare R2, Realtime TURN/SFU, internal imgproxy |
 
-## Architecture discipline
+## Backend layout
 
-Backend domains follow an enforced acyclic import graph. HTTP handlers own transport and schema validation, services own orchestration and business rules, and repositories own SQLAlchemy persistence. Cross-domain ORM relationships are forbidden; domains cross boundaries through typed service calls and foreign-key identifiers.
+Most domains use three layers:
 
-The source stays private. The product is live at **[portalchat.org](https://portalchat.org)**.
+```text
+routes.py       HTTP, dependency injection, schema validation
+service.py      orchestration and business rules
+repository.py   SQLAlchemy persistence
+```
+
+Domain imports follow an enforced acyclic graph, and cross-domain ORM relationships are not allowed. Domains call typed services and pass foreign-key identifiers across boundaries instead.
