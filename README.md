@@ -4,48 +4,46 @@
 
 <h1 align="center">Portal</h1>
 
-Portal is a private messaging app for DMs, group chats, media, and calls. It encrypts messages on your device before they leave, so the server can deliver and sync them without having the keys to read them. Every conversation—including a two-person DM—uses Messaging Layer Security (MLS), the same protocol built for secure group messaging.
+Portal is a private messenger for direct messages, group chats, media and calls. Messages are encrypted on the sender's device and decrypted on the recipient's device. The server handles accounts, delivery and sync without receiving the message keys.
 
 ## How it works
 
-Portal keeps cryptography on the client and delivery on the server.
+Each Portal client stores the data needed to read a chat. The backend receives the public MLS fields and encrypted payloads needed to deliver it.
 
 ```text
-React / iOS clients
-  plaintext · MLS state · attachment keys · identity keys
-                          │
-                          │ WebAuthn + REST / Socket.IO
-                          │ public MLS framing + opaque ciphertext
-                          ▼
+Web and iOS clients
+  Store: plaintext, MLS state, attachment keys, private identity keys
+  Send: public MLS fields and ciphertext
+          |
+          v
 Portal backend
-  authentication · policy · epoch ordering · delivery · sync
-                          │
-            ┌─────────────┼─────────────┐
-            ▼             ▼             ▼
-       PostgreSQL       Redis 8    Cloudflare R2
-       account state    timelines   encrypted media
+  Handles: authentication, permissions, ordering, delivery and sync
+          |
+          + PostgreSQL: users and chat state
+          + Redis: message timelines
+          + Cloudflare R2: encrypted media
 ```
 
-The server sees account identity, membership, roles, timing, routing, ciphertext size, and the public parts of MLS commits. It does not receive message plaintext, MLS group secrets, attachment keys, or identity private keys.
+The backend can read user IDs, chat membership, roles, timestamps, routing data, message size and the public fields in MLS commits. It cannot decrypt messages because clients never upload the group secrets, attachment keys or private identity keys.
 
 ## Backend responsibilities
 
 | Area | Implementation |
 |---|---|
-| Authentication | WebAuthn passkeys, device-scoped sessions, trusted device pairing |
-| Authorization | Conversation membership, moderation, roles, and MLS leaf-to-device binding |
-| MLS coordination | Public commit validation and compare-and-append epoch changes |
-| Messaging | Ordered ciphertext storage without making the server an MLS group member |
-| Synchronization | Canonical REST timelines, ETags, bounded replay, and revision manifests |
-| Realtime | Socket.IO fan-out and invalidation events; REST remains the source of truth |
-| Media | Client-side AES-GCM encryption with opaque objects stored in R2 |
-| Calls | WebRTC mesh and SFU-routed group calls with client-side SFrame encryption |
+| Authentication | WebAuthn passkeys, sessions tied to a device and trusted device pairing |
+| Authorization | Chat membership, moderation, roles and MLS leaf binding to device identities |
+| MLS coordination | Checks public commit fields and uses compare and append when an epoch changes |
+| Messaging | Stores ciphertext in chat order. The backend is not an MLS group member |
+| Synchronization | REST timelines, ETags, replay windows and revision manifests |
+| Realtime | Socket.IO sends new events. REST fills gaps after a client reconnects |
+| Media | Clients encrypt uploads with AES-GCM. R2 stores the encrypted files |
+| Calls | WebRTC handles direct calls. Cloudflare SFU handles groups. SFrame encrypts group call media |
 
 ## MLS commit ordering
 
-An MLS membership change also changes the group's epoch. When two clients submit commits for the same epoch, the backend accepts one and returns an epoch conflict for the other. The losing client replays the canonical timeline, rebuilds its commit against the new epoch, and retries.
+A membership change moves the chat to a new MLS epoch. The backend accepts a commit only when it matches the current epoch. If two commits arrive at once, one succeeds and the other receives a conflict. That client fetches the missing events, builds a commit for the new epoch and tries again.
 
-Welcome messages use a peek-then-consume flow. A joining device saves its MLS state locally before deleting the server copy, so a crash cannot destroy its only usable join material.
+A joining device fetches its Welcome without deleting it. After the device saves its MLS state locally, it deletes the server copy. If the app crashes between those steps, the Welcome can be fetched again.
 
 ## Stack
 
@@ -56,16 +54,16 @@ Welcome messages use a peek-then-consume flow. A joining device saves its MLS st
 | Native | Swift and SwiftUI |
 | Cryptography | MLS (RFC 9420), AES-GCM attachments, SFrame calls |
 | State | PostgreSQL 16, Redis 8, Alembic migrations |
-| Edge | Cloudflare R2, Realtime TURN/SFU, internal imgproxy |
+| Infrastructure | Cloudflare R2, Realtime TURN and SFU, internal imgproxy |
 
 ## Backend layout
 
-Most domains use three layers:
+A typical backend domain has these files:
 
 ```text
-routes.py       HTTP, dependency injection, schema validation
+routes.py       HTTP, dependency injection and schema validation
 service.py      orchestration and business rules
 repository.py   SQLAlchemy persistence
 ```
 
-Domain imports follow an enforced acyclic graph, and cross-domain ORM relationships are not allowed. Domains call typed services and pass foreign-key identifiers across boundaries instead.
+Automated import checks prevent circular dependencies between domains. SQLAlchemy relationships do not cross domain boundaries. When one domain needs another, it calls the other domain's service and passes IDs.
