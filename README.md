@@ -1,15 +1,25 @@
+<a href="https://portalchat.org">
+  <img src="./portal-hero.png" alt="Portal" width="100%">
+</a>
+
+<h1 align="center">Portal</h1>
+
 <p align="center">
-    <br/>
-    <img src="https://i.imgur.com/dgb0eo3.png" alt="Cool Cat" width="256"/>
-    <br/>
-    Contact
-    <br/>
-    <a href="https://discord.com/" title="championoftheworld">
-        <img src="https://img.shields.io/static/v1?label=&message=+&logo=discord&color=5865F2&style=flat-square&logoColor=white" alt="Discord" width="48">
-    </a>
-    <a href="https://t.me/sewerperson" title="sewerperson">
-        <img src="https://img.shields.io/static/v1?label=&message=+&logo=telegram&color=2CA5E0&style=flat-square&logoColor=white" alt="Telegram" width="48">
-    </a>
+  <strong>Encrypted rooms for chats, calls, media, and shared browsing.</strong>
 </p>
 
----
+<p align="center">No feed. No audience. Just the room.</p>
+
+<p align="center">
+  <a href="https://portalchat.org"><strong>Enter Portal →</strong></a>
+</p>
+
+<br>
+
+<a href="https://portalchat.org">
+  <img src="./portal-chat.png" alt="Portal chat" width="100%">
+</a>
+
+<p align="center">
+  <sub>Web + native iOS · passkey-first · source private</sub>
+</p>
