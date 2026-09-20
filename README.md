@@ -29,10 +29,19 @@ Use Portal as it is, connect your own hosting, or run it yourself.
 - **Group chats & private channels.** Public or invite-only groups, roles, moderation, custom emoji and GIFs. A private group's name, description and artwork are encrypted too. Create restricted channels that only the people you grant access to can read.
 - **Voice, video & screen sharing.** Messages, photos, files and calls are end-to-end encrypted, including your screen share. Set disappearing messages with a timer you choose.
 - **Watch parties & shared browsing.** Open a shared browser with Rift, let one person take the controls and follow along together. Use hosted hardware or connect your own computer.
-- **Meet someone new.** Try an encrypted stranger chat without creating a full account.
 - **Passwordless sign-in.** Use a passkey with your fingerprint, face or device PIN. No phone number or email required. Pair a new device from one you already trust, and revoke a device's access if you lose it.
 
 **Browser, phone or desktop.** Start in your browser without installing an app, install Portal on your phone, or use the desktop app.
+
+## 🔎 Discover your next group chat
+
+**Find a community, not just an invite link.** Browse public groups in Explore or search by name or **#tag**. A group's tag gives people a simple way to find it and share it with friends. Private groups stay out of discovery.
+
+## 🎲 Stranger: meet someone new
+
+**Random one-to-one chats.** Get paired with someone new and start talking. Add interest tags to find common ground, see which tags people are waiting under, or jump straight in. Hit **Next** to meet someone else, or block someone you do not want to meet again.
+
+Conversations are **end-to-end encrypted**. Try text chat as a guest without setting up a passkey, or use *incognito mode* to appear under a random alias instead of your usual profile.
 
 ## 🌀 Rift: a browser you share
 
