@@ -1,69 +1,64 @@
 <p align="center">
-  <img src="./portal-logo.png" alt="Portal" width="128">
+  <img src="./portal-mark.svg" alt="Portal" width="112">
 </p>
 
 <h1 align="center">Portal</h1>
 
-Portal is a private messenger for direct messages, group chats, media and calls. Messages are encrypted on the sender's device and decrypted on the recipient's device. The server handles accounts, delivery and sync without receiving the message keys.
+<p align="center">Chat, call and spend time together. On your terms.</p>
 
-## How it works
+<p align="center">
+  <img src="https://img.shields.io/badge/privacy-end--to--end%20encrypted-7c3aed?style=flat-square" alt="End-to-end encrypted">
+  <img src="https://img.shields.io/badge/login-passkeys-0f766e?style=flat-square" alt="Passkey sign-in">
+  <img src="https://img.shields.io/badge/hosting-self--hostable-2563eb?style=flat-square" alt="Self-hostable">
+</p>
 
-Each Portal client stores the data needed to read a chat. The backend receives the public MLS fields and encrypted payloads needed to deliver it.
+<p align="center"><a href="https://portalchat.org">Portal</a> · <a href="https://docs.portalchat.org">Documentation</a></p>
 
-```text
-Web and iOS clients
-  Store: plaintext, MLS state, attachment keys, private identity keys
-  Send: public MLS fields and ciphertext
-          |
-          v
-Portal backend
-  Handles: authentication, permissions, ordering, delivery and sync
-          |
-          + PostgreSQL: users and chat state
-          + Redis: message timelines
-          + Cloudflare R2: encrypted media
-```
+---
 
-The backend can read user IDs, chat membership, roles, timestamps, routing data, message size and the public fields in MLS commits. It cannot decrypt messages because clients never upload the group secrets, attachment keys or private identity keys.
+## What is Portal?
 
-## Backend responsibilities
+Portal is a place for your friends, your group or your community. Message each other, jump into a call, share your screen or open a browser together, all in one place.
 
-| Area | Implementation |
-|---|---|
-| Authentication | WebAuthn passkeys, sessions tied to a device and trusted device pairing |
-| Authorization | Chat membership, moderation, roles and MLS leaf binding to device identities |
-| MLS coordination | Checks public commit fields and uses compare and append when an epoch changes |
-| Messaging | Stores ciphertext in chat order. The backend is not an MLS group member |
-| Synchronization | REST timelines, ETags, replay windows and revision manifests |
-| Realtime | Socket.IO sends new events. REST fills gaps after a client reconnects |
-| Media | Clients encrypt uploads with AES-GCM. R2 stores the encrypted files |
-| Calls | WebRTC handles direct calls. Cloudflare SFU handles groups. SFrame encrypts group call media |
+Your messages and files are end-to-end encrypted. That means they are encrypted on your device and opened on the devices of the people you share them with.
 
-## MLS commit ordering
+Use Portal as it is, connect your own hosting, or run it yourself.
 
-A membership change moves the chat to a new MLS epoch. The backend accepts a commit only when it matches the current epoch. If two commits arrive at once, one succeeds and the other receives a conflict. That client fetches the missing events, builds a commit for the new epoch and tries again.
+## What you can do
 
-A joining device fetches its Welcome without deleting it. After the device saves its MLS state locally, it deletes the server copy. If the app crashes between those steps, the Welcome can be fetched again.
+- **Make a space for your people.** Public or invite-only groups, channels, roles, moderation, custom emoji and GIFs.
+- **Keep the conversation going.** Encrypted messages, photos and files, plus voice, video and screen sharing. Set disappearing messages when you want them.
+- **Browse together with Rift.** Open a shared browser, let one person take the controls and follow along together. Use hosted hardware or connect your own computer.
+- **Meet someone new.** Try an encrypted stranger chat without creating a full account.
+- **Skip the passwords.** Sign in with a passkey using your fingerprint, face or device PIN. No phone number or email required.
 
-## Stack
+Use Portal in your browser, install it on your phone, or use the desktop app.
 
-| Layer | Technology |
-|---|---|
-| Backend | Python 3.13, FastAPI, async SQLAlchemy, Pydantic, Socket.IO, py-webauthn |
-| Web | React 19, TypeScript, Vite, Zustand, Tailwind v4, Zod, Motion |
-| Native | Swift and SwiftUI |
-| Cryptography | MLS (RFC 9420), AES-GCM attachments, SFrame calls |
-| State | PostgreSQL 16, Redis 8, Alembic migrations |
-| Infrastructure | Cloudflare R2, Realtime TURN and SFU, internal imgproxy |
+## Hosting, your way
 
-## Backend layout
+**Just use Portal.** You do not need to own a server or set anything up to chat and hang out.
 
-A typical backend domain has these files:
+**Bring your own pieces.** Connect a computer for Rift, your own file storage, or a server for calls. Storage can be an R2 or S3-compatible bucket, or something you host at home. These are separate choices; you do not need to host everything.
 
-```text
-routes.py       HTTP, dependency injection and schema validation
-service.py      orchestration and business rules
-repository.py   SQLAlchemy persistence
-```
+**Run the whole thing.** Host Portal for your own group or community with Docker Compose. Your chat server, storage and calls can live on infrastructure you control.
 
-Automated import checks prevent circular dependencies between domains. SQLAlchemy relationships do not cross domain boundaries. When one domain needs another, it calls the other domain's service and passes IDs.
+## Contributions beyond Portal
+
+Building Portal has led to **three merged contributions to Amazon's open-source [MLS library](https://github.com/awslabs/mls-rs)**, which helps power Portal's encryption.
+
+[View #369](https://github.com/awslabs/mls-rs/pull/369) · [View #380](https://github.com/awslabs/mls-rs/pull/380) · [View #381](https://github.com/awslabs/mls-rs/pull/381)
+
+<details>
+<summary><strong>For the technically curious</strong></summary>
+
+Portal uses **MLS (Messaging Layer Security)** for groups, direct messages and stranger chats. Its Rust encryption engine runs in the browser through WebAssembly. The three upstream changes expose public protocol information the delivery server needs without providing message-decryption keys.
+
+Realtime updates carry complete, versioned state. Reconnecting repairs missed updates, while ordered message history fills the gaps.
+
+**Built with:** React, TypeScript, Python, FastAPI, Rust, PostgreSQL, Redis and LiveKit.
+
+</details>
+
+---
+
+<sub>This is Portal's public profile. The application source is intended for release under AGPL-3.0.</sub>
