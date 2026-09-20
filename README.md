@@ -72,15 +72,24 @@ Building Portal has led to **three merged contributions to Amazon's open-source 
 <details>
 <summary><strong>For the technically curious</strong></summary>
 
-Portal uses **MLS (Messaging Layer Security)** for groups, direct messages and stranger chats. Its Rust encryption engine runs in the browser through WebAssembly. A Rust adapter also lets the backend inspect public protocol information without receiving message-decryption keys. Both sides use the same pinned MLS library, with automated checks keeping them in step.
+<p align="center">
+  <img src="https://img.shields.io/badge/source_%26_tests-250k%2B_lines-475569?style=flat-square" alt="250k+ lines across source and tests, excluding generated code">
+  <img src="https://img.shields.io/badge/API-20%2B_routers-0f766e?style=flat-square" alt="20+ API routers">
+  <img src="https://img.shields.io/badge/frontend-15_domains-7c3aed?style=flat-square" alt="15 frontend domains">
+</p>
 
-**Recovery matters as much as delivery.** Realtime updates carry complete, versioned state. Reconnecting repairs missed updates, while ordered message history fills the gaps. If two group membership changes happen at once, the client catches up and retries against the new state. A joining device saves its new chat state before acknowledging its encrypted welcome, so an interrupted join can resume.
+| Layer | Stack |
+| :--- | :--- |
+| **Web** | ![React](https://img.shields.io/badge/React-151B23?style=flat-square&logo=react&logoColor=61DAFB) ![TypeScript](https://img.shields.io/badge/TypeScript-151B23?style=flat-square&logo=typescript&logoColor=3178C6) ![Vite](https://img.shields.io/badge/Vite-151B23?style=flat-square&logo=vite&logoColor=646CFF) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-151B23?style=flat-square&logo=tailwindcss&logoColor=06B6D4) ![Zustand](https://img.shields.io/badge/Zustand-151B23?style=flat-square) ![Zod](https://img.shields.io/badge/Zod-151B23?style=flat-square&logo=zod&logoColor=408AFF) |
+| **Desktop** | ![Electron](https://img.shields.io/badge/Electron-151B23?style=flat-square&logo=electron&logoColor=9FEAF9) |
+| **Backend** | ![Python](https://img.shields.io/badge/Python-151B23?style=flat-square&logo=python&logoColor=FFD43B) ![FastAPI](https://img.shields.io/badge/FastAPI-151B23?style=flat-square&logo=fastapi&logoColor=009688) ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-151B23?style=flat-square&logo=sqlalchemy&logoColor=D71F00) ![Pydantic](https://img.shields.io/badge/Pydantic-151B23?style=flat-square&logo=pydantic&logoColor=E92063) ![Socket.IO](https://img.shields.io/badge/Socket.IO-151B23?style=flat-square&logo=socketdotio&logoColor=white) |
+| **Encryption** | ![Rust](https://img.shields.io/badge/Rust-151B23?style=flat-square&logo=rust&logoColor=F5A97F) ![WebAssembly](https://img.shields.io/badge/WebAssembly-151B23?style=flat-square&logo=webassembly&logoColor=A78BFA) ![MLS · RFC 9420](https://img.shields.io/badge/MLS-RFC_9420-475569?style=flat-square&labelColor=151B23) ![AES-GCM](https://img.shields.io/badge/AES--GCM-151B23?style=flat-square) |
+| **Sign-in** | ![WebAuthn](https://img.shields.io/badge/WebAuthn-151B23?style=flat-square) ![Passkeys](https://img.shields.io/badge/Passkeys-151B23?style=flat-square) |
+| **Calls & Rift** | ![LiveKit](https://img.shields.io/badge/LiveKit-151B23?style=flat-square&logo=livekit&logoColor=white) ![WebRTC](https://img.shields.io/badge/WebRTC-151B23?style=flat-square&logo=webrtc&logoColor=white) ![GPU-backed browsing](https://img.shields.io/badge/GPU--backed_browsing-151B23?style=flat-square) |
+| **Data & storage** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-151B23?style=flat-square&logo=postgresql&logoColor=699ECA) ![Redis](https://img.shields.io/badge/Redis-151B23?style=flat-square&logo=redis&logoColor=FF4438) ![S3-compatible](https://img.shields.io/badge/S3--compatible-151B23?style=flat-square) ![Cloudflare R2](https://img.shields.io/badge/Cloudflare_R2-151B23?style=flat-square&logo=cloudflare&logoColor=F38020) |
+| **Self-hosting** | ![Docker Compose](https://img.shields.io/badge/Docker_Compose-151B23?style=flat-square&logo=docker&logoColor=2496ED) · Bring your own GPU, storage and call servers |
 
-**Calls use LiveKit with encryption keys derived from MLS.** The media server forwards encrypted audio and video. Attachments are encrypted before upload to S3-compatible storage.
-
-**The architecture is checked, not just documented.** Automated checks enforce code boundaries, keep the generated API client aligned with the backend, and check the shared Rust protocol code. Browser and end-to-end checks exercise the complete flows.
-
-**Built with:** React, TypeScript, Python, FastAPI, Rust, PostgreSQL, Redis and LiveKit.
+<sub>Line count includes source and tests, excluding generated code.</sub>
 
 </details>
 
